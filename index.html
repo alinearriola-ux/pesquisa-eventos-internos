@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pesquisa — Eventos Internos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f13;
+      --surface: #18181f;
+      --border: #2a2a35;
+      --accent: #7c5cfc;
+      --accent2: #a78bfa;
+      --text: #f0f0f5;
+      --muted: #8888a0;
+      --success: #34d399;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── PROGRESS BAR ── */
+    #progress-bar {
+      position: fixed;
+      top: 0; left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      width: 0%;
+      transition: width 0.5s cubic-bezier(.4,0,.2,1);
+      z-index: 100;
+      border-radius: 0 2px 2px 0;
+    }
+
+    /* ── HEADER ── */
+    #header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 50;
+    }
+
+    .logo {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+
+    .step-counter {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    /* ── SCREENS ── */
+    #app {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+    }
+
+    .screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 24px 120px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .4s ease, transform .4s cubic-bezier(.4,0,.2,1);
+      transform: translateY(40px);
+    }
+
+    .screen.active {
+      opacity: 1;
+      pointer-events: all;
+      transform: translateY(0);
+    }
+
+    .screen.exit-up {
+      opacity: 0;
+      transform: translateY(-40px);
+    }
+
+    /* ── WELCOME ── */
+    .welcome-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(124,92,252,.15);
+      border: 1px solid rgba(124,92,252,.3);
+      border-radius: 100px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent2);
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      margin-bottom: 32px;
+    }
+
+    .welcome-title {
+      font-size: clamp(28px, 5vw, 52px);
+      font-weight: 700;
+      text-align: center;
+      line-height: 1.15;
+      letter-spacing: -.5px;
+      max-width: 640px;
+    }
+
+    .welcome-title span {
+      background: linear-gradient(135deg, var(--accent2), #c4b5fd);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .welcome-sub {
+      margin-top: 20px;
+      font-size: 16px;
+      color: var(--muted);
+      text-align: center;
+      max-width: 480px;
+      line-height: 1.6;
+    }
+
+    .welcome-pills {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 32px;
+    }
+
+    .pill {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 7px 16px;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    /* ── SECTION DIVIDER ── */
+    .section-screen {
+      text-align: center;
+    }
+
+    .section-number {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: clamp(22px, 4vw, 36px);
+      font-weight: 700;
+      letter-spacing: -.3px;
+      margin-bottom: 12px;
+    }
+
+    .section-subtitle {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    /* ── QUESTION ── */
+    .question-wrap {
+      width: 100%;
+      max-width: 640px;
+    }
+
+    .q-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+
+    .q-number {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: rgba(124,92,252,.2);
+      border: 1px solid rgba(124,92,252,.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent2);
+      flex-shrink: 0;
+    }
+
+    .q-section-tag {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+
+    .q-text {
+      font-size: clamp(18px, 3vw, 26px);
+      font-weight: 600;
+      line-height: 1.4;
+      letter-spacing: -.2px;
+      margin-bottom: 32px;
+    }
+
+    textarea {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 20px;
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      color: var(--text);
+      resize: none;
+      min-height: 140px;
+      transition: border-color .2s, box-shadow .2s;
+      outline: none;
+      line-height: 1.6;
+    }
+
+    textarea::placeholder { color: #55556a; }
+
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(124,92,252,.15);
+    }
+
+    .textarea-hint {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .kbd {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 2px 6px;
+      font-size: 11px;
+      color: var(--muted);
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* ── BUTTONS ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 12px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 15px;
+      cursor: pointer;
+      border: none;
+      transition: all .2s ease;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      padding: 14px 28px;
+      box-shadow: 0 4px 20px rgba(124,92,252,.35);
+    }
+
+    .btn-primary:hover {
+      background: #8b6bfd;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 28px rgba(124,92,252,.45);
+    }
+
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted);
+      padding: 12px 20px;
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover { color: var(--text); border-color: #444; }
+
+    /* ── NAV ── */
+    #nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      padding: 20px 32px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(to top, var(--bg) 60%, transparent);
+      z-index: 50;
+    }
+
+    #nav.hidden { display: none; }
+
+    .nav-left { display: flex; gap: 10px; }
+
+    /* ── THANK YOU ── */
+    .thanks-icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: rgba(52,211,153,.15);
+      border: 2px solid rgba(52,211,153,.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      margin-bottom: 28px;
+    }
+
+    .thanks-title {
+      font-size: clamp(24px, 4vw, 40px);
+      font-weight: 700;
+      text-align: center;
+      letter-spacing: -.3px;
+      margin-bottom: 12px;
+    }
+
+    .thanks-sub {
+      font-size: 15px;
+      color: var(--muted);
+      text-align: center;
+      max-width: 440px;
+      line-height: 1.65;
+      margin-bottom: 36px;
+    }
+
+    /* ── DECORATIVE BG ── */
+    .bg-glow {
+      position: fixed;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: .07;
+      pointer-events: none;
+    }
+
+    .bg-glow-1 {
+      background: var(--accent);
+      top: -200px;
+      right: -100px;
+    }
+
+    .bg-glow-2 {
+      background: #c084fc;
+      bottom: -200px;
+      left: -100px;
+    }
+
+    /* ── MOBILE ── */
+    @media (max-width: 600px) {
+      #header { padding: 16px 20px; }
+      #nav { padding: 16px 20px 24px; }
+      .screen { padding: 70px 20px 110px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg-glow bg-glow-1"></div>
+<div class="bg-glow bg-glow-2"></div>
+
+<div id="progress-bar"></div>
+
+<div id="header">
+  <div class="logo">Eventos Internos</div>
+  <div class="step-counter" id="step-counter"></div>
+</div>
+
+<div id="app"></div>
+
+<div id="nav">
+  <div class="nav-left">
+    <button class="btn btn-ghost" id="btn-back" onclick="goBack()">← Voltar</button>
+  </div>
+  <button class="btn btn-primary" id="btn-next" onclick="goNext()">
+    Próxima <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+  </button>
+</div>
+
+<script>
+const SECTIONS = [
+  { id: 'visao', label: 'Visão Geral' },
+  { id: 'cafe',  label: 'Café de Sexta' },
+  { id: 'gpt',   label: 'GPTTando' },
+  { id: 'copro', label: 'Copropriedade' },
+];
+
+const QUESTIONS = [
+  { id: 1,  section: 'visao', text: 'Quando você pensa nos nossos eventos internos hoje, qual é a primeira coisa que vem à sua cabeça?' },
+  { id: 2,  section: 'visao', text: 'O que faz você escolher participar ou não participar de um evento interno?' },
+  { id: 3,  section: 'visao', text: 'O que precisa acontecer em um evento interno para você sentir que "valeu a pena estar aqui"?' },
+  { id: 4,  section: 'cafe',  text: 'O que mais gera valor para você no Café de Sexta hoje?' },
+  { id: 5,  section: 'cafe',  text: 'O que hoje reduz sua vontade de participar do Café de Sexta?' },
+  { id: 6,  section: 'cafe',  text: 'Se você pudesse mudar uma coisa no Café de Sexta para aumentar energia, presença e interação, o que mudaria?' },
+  { id: 7,  section: 'cafe',  text: 'O formato atual (café + report de prioridades) ajuda você a se sentir mais conectado com a empresa? Por quê?' },
+  { id: 8,  section: 'cafe',  text: 'O que tornaria esse momento mais útil, leve e relevante para você?' },
+  { id: 9,  section: 'gpt',   text: 'O que mais chama sua atenção no GPTTando hoje?' },
+  { id: 10, section: 'gpt',   text: 'O que hoje dificulta ou reduz sua participação no GPTTando?' },
+  { id: 11, section: 'gpt',   text: 'Quais temas, formatos ou experiências fariam você ter mais vontade de participar?' },
+  { id: 12, section: 'gpt',   text: 'Como podemos tornar o GPTTando mais prático, interativo e aplicável no seu dia a dia?' },
+  { id: 13, section: 'copro', text: 'Se esses eventos fossem "imperdíveis" para você, o que teria neles?' },
+  { id: 14, section: 'copro', text: 'Existe algo que estamos fazendo hoje e deveríamos parar de fazer?' },
+  { id: 15, section: 'copro', text: 'Existe algo que ainda não fazemos e deveríamos começar?' },
+  { id: 16, section: 'copro', text: 'Se esses eventos fossem desenhados por você, como seriam?' },
+];
+
+const SECTION_META = {
+  visao: { num: 'Seção 01', title: 'Visão Geral', sub: 'Como você enxerga os eventos internos hoje' },
+  cafe:  { num: 'Seção 02', title: 'Café de Sexta', sub: '08:00–08:30 café · 08:30–09:30 prioridades do mês' },
+  gpt:   { num: 'Seção 03', title: 'Workshop GPTTando', sub: '16:30–18:00 · IA, novidades, práticas e experimentação' },
+  copro: { num: 'Seção 04', title: 'Copropriedade', sub: 'Sua visão sobre o futuro dos nossos eventos' },
+};
+
+// Build flow: welcome → section dividers → questions → thanks
+const FLOW = [];
+FLOW.push({ type: 'welcome' });
+
+let prevSection = null;
+QUESTIONS.forEach(q => {
+  if (q.section !== prevSection) {
+    FLOW.push({ type: 'section', section: q.section });
+    prevSection = q.section;
+  }
+  FLOW.push({ type: 'question', q });
+});
+FLOW.push({ type: 'thanks' });
+
+let current = 0;
+const answers = {};
+const totalQ = QUESTIONS.length;
+
+function questionIndex() {
+  // count how many question slides are before current
+  let count = 0;
+  for (let i = 0; i < current; i++) {
+    if (FLOW[i].type === 'question') count++;
+  }
+  return count;
+}
+
+function render() {
+  const app = document.getElementById('app');
+  const item = FLOW[current];
+  const isFirst = current === 0;
+  const isLast = item.type === 'thanks';
+
+  // progress
+  const pct = isLast ? 100 : Math.round((current / (FLOW.length - 1)) * 100);
+  document.getElementById('progress-bar').style.width = pct + '%';
+
+  // counter
+  const counter = document.getElementById('step-counter');
+  if (item.type === 'question') {
+    counter.textContent = `${item.q.id} / ${totalQ}`;
+  } else {
+    counter.textContent = '';
+  }
+
+  // nav
+  const nav = document.getElementById('nav');
+  const btnBack = document.getElementById('btn-back');
+  const btnNext = document.getElementById('btn-next');
+
+  if (isLast) {
+    nav.classList.add('hidden');
+  } else {
+    nav.classList.remove('hidden');
+    btnBack.style.visibility = isFirst ? 'hidden' : 'visible';
+    btnNext.innerHTML = isFirst
+      ? 'Começar <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>'
+      : item.type === 'question'
+        ? 'Próxima <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>'
+        : item.type === 'section' && FLOW[current + 1]?.type === 'thanks'
+          ? 'Finalizar ✓'
+          : 'Continuar <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+  }
+
+  // build screen html
+  let html = '';
+
+  if (item.type === 'welcome') {
+    html = `
+      <div class="screen active" id="current-screen" style="text-align:center;align-items:center;">
+        <div class="welcome-badge">🔒 100% Anônima</div>
+        <h1 class="welcome-title">Sua voz vai<br><span>redesenhar nossos eventos</span></h1>
+        <p class="welcome-sub">Responda só o que quiser. Sem identificação, sem julgamento. Cada resposta conta.</p>
+        <div class="welcome-pills">
+          <div class="pill">☕ Café de Sexta</div>
+          <div class="pill">🤖 GPTTando</div>
+          <div class="pill">16 perguntas abertas</div>
+          <div class="pill">~5 min</div>
+        </div>
+      </div>`;
+  } else if (item.type === 'section') {
+    const m = SECTION_META[item.section];
+    html = `
+      <div class="screen active section-screen" id="current-screen">
+        <div class="section-number">${m.num}</div>
+        <h2 class="section-title">${m.title}</h2>
+        <p class="section-subtitle">${m.sub}</p>
+      </div>`;
+  } else if (item.type === 'question') {
+    const q = item.q;
+    const sLabel = SECTIONS.find(s => s.id === q.section)?.label || '';
+    const saved = answers[q.id] || '';
+    html = `
+      <div class="screen active" id="current-screen">
+        <div class="question-wrap">
+          <div class="q-meta">
+            <div class="q-number">${q.id}</div>
+            <div class="q-section-tag">${sLabel}</div>
+          </div>
+          <div class="q-text">${q.text}</div>
+          <textarea id="answer-${q.id}" placeholder="Digite sua resposta aqui..." rows="5">${saved}</textarea>
+          <div class="textarea-hint">
+            Opcional — pressione <span class="kbd">Enter</span><span class="kbd">↵</span> para próxima, ou <span class="kbd">Shift</span>+<span class="kbd">Enter</span> para nova linha
+          </div>
+        </div>
+      </div>`;
+  } else if (item.type === 'thanks') {
+    html = `
+      <div class="screen active" id="current-screen" style="text-align:center;align-items:center;">
+        <div class="thanks-icon">✓</div>
+        <h2 class="thanks-title">Obrigado!</h2>
+        <p class="thanks-sub">Suas respostas foram registradas. Cada feedback é uma peça que vai ajudar a construir eventos muito melhores para todos.</p>
+        <button class="btn btn-primary" onclick="downloadAnswers()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Baixar minhas respostas
+        </button>
+      </div>`;
+  }
+
+  // animate out old
+  const old = document.getElementById('current-screen');
+  if (old) {
+    old.classList.remove('active');
+    old.classList.add('exit-up');
+    setTimeout(() => { app.innerHTML = html; afterRender(); }, 350);
+  } else {
+    app.innerHTML = html;
+    afterRender();
+  }
+}
+
+function afterRender() {
+  const screen = document.getElementById('current-screen');
+  if (!screen) return;
+  setTimeout(() => screen.classList.add('active'), 10);
+
+  const item = FLOW[current];
+  if (item.type === 'question') {
+    const ta = document.getElementById('answer-' + item.q.id);
+    if (ta) {
+      setTimeout(() => ta.focus(), 350);
+      ta.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); goNext(); }
+      });
+    }
+  }
+}
+
+function saveCurrentAnswer() {
+  const item = FLOW[current];
+  if (item.type === 'question') {
+    const ta = document.getElementById('answer-' + item.q.id);
+    if (ta) answers[item.q.id] = ta.value;
+  }
+}
+
+function goNext() {
+  saveCurrentAnswer();
+  if (current < FLOW.length - 1) {
+    current++;
+    render();
+  }
+}
+
+function goBack() {
+  saveCurrentAnswer();
+  if (current > 0) {
+    current--;
+    render();
+  }
+}
+
+function downloadAnswers() {
+  const SECTION_LABELS = {
+    visao: 'VISÃO GERAL',
+    cafe: 'CAFÉ DE SEXTA',
+    gpt: 'WORKSHOP GPTTANDO',
+    copro: 'COPROPRIEDADE',
+  };
+  let text = 'PESQUISA ANÔNIMA — EVENTOS INTERNOS\n';
+  text += '=====================================\n\n';
+
+  let lastSection = null;
+  QUESTIONS.forEach(q => {
+    if (q.section !== lastSection) {
+      text += `\n── ${SECTION_LABELS[q.section]} ──\n\n`;
+      lastSection = q.section;
+    }
+    const ans = answers[q.id] || '(sem resposta)';
+    text += `${q.id}. ${q.text}\n→ ${ans}\n\n`;
+  });
+
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'pesquisa-eventos-internos.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// init
+render();
+</script>
+</body>
+</html>
